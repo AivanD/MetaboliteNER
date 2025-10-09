@@ -1,3 +1,8 @@
+[![DOI](https://zenodo.org/badge/407162055.svg)](https://zenodo.org/doi/10.5281/zenodo.10581588)
+[![DOI:10.1101/2022.02.22.481457](http://img.shields.io/badge/DOI-10.1101/2022.02.22.481457-BE2536.svg)](https://doi.org/10.1101/2022.02.22.481457)
+[![DOI:10.3390/metabo12040276](http://img.shields.io/badge/DOI-10.3390/metabo12040276-074F57.svg)](https://doi.org/10.3390/metabo12040276)
+[![CoDiet](https://img.shields.io/badge/used_by:_%F0%9F%8D%8E_CoDiet-5AA764)](https://www.codiet.eu)
+
 # MetaboliteNER
 This repository contains the codes and models of a metabolite named entity recognition (NER) project. The main features you can find in this repository are as follows: 
 
@@ -7,10 +12,6 @@ This repository contains the codes and models of a metabolite named entity recog
 * A rule-based annotation pipeline that automatically annotate ([AutoCORPus](https://github.com/omicsNLP/Auto-CORPus)-processed) publications (`generate_corpus.py`);
 * MetaboListem, a machine learning model that recognises metabolite names (`metabolistem_model.py`), adapted from a chemical NER model named [ChemListem](https://bitbucket.org/rscapplications/chemlistem/src/master/);
 * TABoLiSTM, a [BERT](https://arxiv.org/abs/1810.04805)-based machine learning model that recognises metabolite names (`tabolistem_model.py`), adapted from MetaboListem.
-
-[![DOI](https://zenodo.org/badge/407162055.svg)](https://zenodo.org/doi/10.5281/zenodo.10581588)
-[![DOI:10.1101/2022.02.22.481457](http://img.shields.io/badge/DOI-10.1101/2022.02.22.481457-BE2536.svg)](https://doi.org/10.1101/2022.02.22.481457)
-[![DOI:10.3390/metabo12040276](http://img.shields.io/badge/DOI-10.3390/metabo12040276-074F57.svg)](https://doi.org/10.3390/metabo12040276)
 
 ## Dependencies
 This project is written in Python 3.7.10 and has been tested on Windows 10. Compatibility with other Python versions and systems have not been verified. 
@@ -170,3 +171,4 @@ which requires 6 arguments:
 * `-e`: Filepath to a file storing a list of regular expressions to exclude unwanted entities (e.g. `ExclusionList_RuleBasedAnnotation.txt`)
 
 The metabolite names here (`MetaboliteNames.txt`) were downloaded from the [Human Metabolome Database](https://hmdb.ca/downloads) (HMDB). 
+
