@@ -1,2 +1,17 @@
+# models zip and folders
 Models/TABoLiSTM_Dec_BERT.zip
+Models/metabolistem/
+Models/TABoLiSTM/
+
 Corpus/glove.6B.300d.txt
+
+# pycache
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+*$py.class
+
+# vscode
+.vscode/
+
