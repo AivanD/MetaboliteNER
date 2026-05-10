@@ -3,7 +3,7 @@ import re
 stop_words=[]
 stop_word_path='StopWords.txt'
 try:
-    with open('StopWords.txt','r') as f:
+    with open('StopWords.txt', 'r', encoding='cp1252') as f:
         stop_words=f.read().split('\n')
 except FileNotFoundError:
     'Stop words specification missing. Proceding without...'
