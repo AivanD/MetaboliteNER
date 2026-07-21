@@ -109,7 +109,7 @@ class Featurizer(object):
     named entity or not. Most notable - output from a Random Forest.
     """
 
-    def __init__(self, train=None, model=None, extrachem=None, bert_pretrain_path="bert-base-cased"):#"path/to/biobert"):
+    def __init__(self, train=None, model=None, extrachem=None, bert_pretrain_path="dmis-lab/biobert-base-cased-v1.2"):
         """
         Train the Featurizer, or 
 

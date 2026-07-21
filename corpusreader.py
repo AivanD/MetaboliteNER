@@ -3,9 +3,6 @@ from datetime import datetime
 
 from transformers import BertTokenizer
 import numpy as np
-import chemtok
-
-
 import pandas as pd
 
 
@@ -30,9 +27,8 @@ class CorpusReader(object):
             PMCID, SentenceCode, StartOffset, EndOffset, String
     """
 
-    def __init__(self, text_file, annot_file, max_seq_len=256, seed=42, 
-                 bert_pretrain_path=#"path/to/biobert")
-                "bert-base-cased"):
+    def __init__(self, text_file, annot_file, max_seq_len=256, seed=42,
+                 bert_pretrain_path="dmis-lab/biobert-base-cased-v1.2"):
         print("Reading corpus at", datetime.now())
         self.aggressive = False
         self.charbychar = False
@@ -63,41 +59,38 @@ class CorpusReader(object):
     def str_to_seq(self, s):
         '''
         Computes truncated sequence data of input s
-        
+
         Args:
                 s: Sentence string to be processed
 
         Returns:
-                The sequence data seq of the sentence s. Seq is a dictionary, containing: 
-                    tokens: s tokenized by the predefined Transformer tokenizer, as a list of str
-                    bio: BIOES tags of the tokens, as a list of str. This is an empty list before filling by consequent procedure
+                The sequence data seq of the sentence s. Seq is a dictionary, containing:
+                    tokens: s tokenized by BioBERT, as a list of str
+                    bio: BIOES tags of the tokens, as a list of str
                     tokstart: the start position of each token of s, as a list of int
                     tokend: the end position of each token of s, as a list of int
-                    chemtok_tokens: s tokenized by chemtok, as a list of str
-                    chemtok_rep: number of tokens that a chemtok token splits into by Transformer, as a list of int
+                    chemtok_tokens: s tokenized by BioBERT (identity mapping), as a list of str
+                    chemtok_rep: replication factor (all 1s for direct BioBERT)
                     str: the input text
         '''
-        # Generate sequence of str. Used for input of BIOES
         seq = {"tokens": [], "bio": [],
-               "tokstart": [], "tokend": [],"chemtok_tokens":[],"chemtok_rep":[], "str": s}
-        ct = chemtok.ChemTokeniser(s, clm=True)
-        chemtok_tokens=[t.value for t in ct.tokens]
-        
-        token_list=[self.tokenizer.tokenize(t) for t in chemtok_tokens]
-        
-        tokenized = sum(token_list,[])
-        
-        chemtok_rep=[len(t) for t in token_list]
-        # Truncation
-        len_token=len(tokenized)
-        if len_token>self.max_seq_len-2:
-            tokenized = tokenized[:self.max_seq_len-2]
-            while len_token>self.max_seq_len-2:
-                truncated_token=chemtok_tokens.pop()
-                truncated_token_rep=chemtok_rep.pop()
-                len_token-=truncated_token_rep
-            
-        seq["chemtok_tokens"]=chemtok_tokens
+               "tokstart": [], "tokend": [],
+               "chemtok_tokens": [], "chemtok_rep": [], "str": s}
+
+        # BioBERT tokenization directly (matches paper methodology for TABoLiSTM)
+        tokenized = self.tokenizer.tokenize(s)
+
+        # Each BioBERT token corresponds to one "chemtok" token (identity mapping)
+        chemtok_tokens = list(tokenized)
+        chemtok_rep = [1] * len(tokenized)
+
+        # Truncate
+        if len(tokenized) > self.max_seq_len - 2:
+            chemtok_tokens = chemtok_tokens[:self.max_seq_len - 2]
+            tokenized = tokenized[:self.max_seq_len - 2]
+            chemtok_rep = chemtok_rep[:self.max_seq_len - 2]
+
+        seq["chemtok_tokens"] = chemtok_tokens
         seq["tokens"] = tokenized.copy()
         seq["chemtok_rep"] = chemtok_rep
 
@@ -108,7 +101,7 @@ class CorpusReader(object):
                     tok = tok[2:]
 
             tokstart = s.rfind(tok)
-            tokend = tokstart+len(tok)
+            tokend = tokstart + len(tok)
             s = s[:tokstart]
             seq["tokstart"].append(tokstart)
             seq["tokend"].append(tokend)
@@ -174,25 +167,21 @@ class CorpusReader(object):
     def to_bioes(self, text_df, _annot_df):
         '''
             Computes the bioes and other auxillary information of the given texts and annotations
-            
-            Args:
-                text_df: a dataframe that contains textual information of the corpus, consists of fields 'corpus', 'section' and 'text'
-                _annot_df: a dataframe that contains all annotations of texts in text_df
-                
-            Returns:
-                a list of seq (the dictionary as specified in str_to_seq), each seq corresponds to the processed result of a sentence in text_df
         '''
         seqs = []
-        for i in text_df.index:  # loop over sentences
+        grouped_annots = _annot_df.groupby(['corpus', 'section'])
+
+        for i, row in text_df.iterrows():  # loop over sentences
             seq_dict = {}
-            corpus_id = text_df.loc[i, 'corpus']
-            section_id = text_df.loc[i, 'section']
-            text = text_df.loc[i, 'text']
+            corpus_id = row['corpus']
+            section_id = row['section']
+            text = row['text']
             seq_dict['ss'] = text
 
-            # Zoom in df
-            annot_df_sub = _annot_df[_annot_df.corpus == corpus_id]
-            annot_df_sub = annot_df_sub[annot_df_sub.section == section_id]
+            try:
+                annot_df_sub = grouped_annots.get_group((corpus_id, section_id))
+            except KeyError:
+                annot_df_sub = pd.DataFrame(columns=_annot_df.columns)
 
             start_list = list(annot_df_sub.start)
             end_list = list(annot_df_sub.end)
@@ -209,8 +198,8 @@ class CorpusReader(object):
             seq_dict['tokens'] = seq['tokens']
             seq_dict['tokstart'] = seq['tokstart']
             seq_dict['tokend'] = seq['tokend']
-            seq_dict["chemtok_tokens"] = seq["chemtok_tokens"]
-            seq_dict["chemtok_rep"] = seq["chemtok_rep"]
+            seq_dict['chemtok_tokens'] = seq['chemtok_tokens']
+            seq_dict['chemtok_rep'] = seq['chemtok_rep']
 
             bioes_seq = self.revise(
                 [self._pos_to_bioes(pos_list, b) for b in tok_pos])

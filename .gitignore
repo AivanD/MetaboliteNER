@@ -2,6 +2,9 @@
 Models/TABoLiSTM_Dec_BERT.zip
 Models/metabolistem/
 Models/TABoLiSTM/
+TrainedModels/
+TrainedModels-old/
+
 
 Corpus/glove.6B.300d.txt
 
